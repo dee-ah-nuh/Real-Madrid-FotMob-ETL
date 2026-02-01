@@ -3,21 +3,6 @@
 -- Structure matches the fotmob_schema() function output
 
 
-{{ config(
-    materialized='table',
-    tags=['staging', 'raw-data'],
-    pre_hook=[
-        "INSTALL httpfs",
-        "LOAD httpfs",
-        "CREATE OR REPLACE SECRET fotmob_etl_secret (
-            TYPE s3,
-            PROVIDER config,
-            KEY_ID 'AKIA2UC3E2EDZWZ6GOM5',
-            SECRET 'rfKmcQvlsKDzswrFO2tpiPmBlEkD9YhYdObYcewf',
-            REGION 'us-east-2'
-        )"
-    ]
-) }}
 SELECT 
     regexp_extract(filename, '(\d+)\.json$', 1)::BIGINT as match_id,
     filename as source_file,
