@@ -5,15 +5,32 @@ data/*
 .env
 .env.local
 
+airflow/transform/dbt_project.yml
 
 
+# dbt artifacts
+airflow/transform/target/
+airflow/transform/dbt_packages/
+airflow/transform/.dbt/
+
+# dbt logs
+airflow/transform/logs/
+
+airflow/logs/*
+airflow/*logs
+
+# Additional ignores for runtime logs and generated files
+logs/
+logs/*
+airflow/logs/dag_processor/
+airflow/logs/**
+.DS_Store
 
 
+# duckDB
+*.duckdb
+airflow/transform/*.duckdb
 
-
-
-
-# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
