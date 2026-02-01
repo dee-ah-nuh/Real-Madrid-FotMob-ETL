@@ -18,7 +18,7 @@ def run_team_extraction(config_path, season):
     return run_extraction(config_path, season)
 
 with DAG(
-    dag_id="extract_teams",
+    dag_id="fotmob-etl-extract_teams",
     default_args=default_args,
     schedule="0 6 * * *",  # Daily at 6 AM UTC
     start_date=datetime(2024, 1, 1),

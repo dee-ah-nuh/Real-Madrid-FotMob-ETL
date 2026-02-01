@@ -18,3 +18,7 @@ urllib3>=1.26.0
 
 # For JSON processing
 jsonschema>=4.17.0
+
+# DBT dependencies
+dbt-core==1.7.0
+dbt-duckdb==1.7.0

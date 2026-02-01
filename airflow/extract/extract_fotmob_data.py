@@ -22,7 +22,7 @@ def load_team_config(config_path):
 
 def upload_to_s3(data, team_name, match_id, season):
     season_str = season.replace("/", "_")
-    key = f"{S3_PATHS['raw_json']}/{team_name}/{match_id}_season_{season_str}.json"
+    key = f"{S3_PATHS['raw_json']}/{team_name}/{season_str}/{match_id}.json"
     try:
         s3_client.put_object(
             Bucket=S3_BUCKET,
