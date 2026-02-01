@@ -1,0 +1,184 @@
+version: 2
+
+models:
+  # Staging models
+  - name: stg_raw_matches
+    description: Raw match JSON data from FotMob
+    columns:
+      - name: match_id
+        description: Unique match identifier
+      - name: match_json
+        description: Complete match JSON object
+      - name: ingestion_timestamp
+        description: When the data was ingested
+
+  - name: stg_dim_teams
+    description: Team dimension extracted from match data
+    columns:
+      - name: match_id
+        description: Match identifier
+      - name: team_id
+        description: Unique team identifier
+      - name: team_name
+        description: Team name
+      - name: country_code
+        description: Team country code
+      - name: stadium_name
+        description: Home stadium name
+      - name: stadium_city
+        description: Stadium location city
+      - name: stadium_capacity
+        description: Stadium capacity (from attendance)
+      - name: team_side
+        description: "Home or away team in the match"
+
+  - name: stg_dim_leagues
+    description: League dimension
+    columns:
+      - name: league_id
+        description: Unique league identifier
+      - name: league_name
+        description: League name
+      - name: parent_league_id
+        description: Parent league if applicable
+      - name: country_code
+        description: Country code
+
+  - name: stg_fact_matches
+    description: Core match facts and scores
+    columns:
+      - name: match_id
+        description: Unique match identifier
+        tests:
+          - not_null
+          - unique
+      - name: match_name
+        description: Human-readable match name
+      - name: match_time_utc
+        description: Match start time in UTC
+      - name: league_id
+        description: League identifier
+      - name: home_team_id
+        description: Home team identifier
+      - name: away_team_id
+        description: Away team identifier
+      - name: home_score
+        description: Home team final score
+      - name: away_score
+        description: Away team final score
+      - name: home_formation
+        description: Home team formation (e.g., 4-3-3)
+      - name: away_formation
+        description: Away team formation
+      - name: match_status
+        description: "Match status: finished, started, cancelled, scheduled"
+
+  - name: stg_dim_players
+    description: Player dimension with performance ratings
+    columns:
+      - name: match_id
+        description: Match identifier
+      - name: player_id
+        description: Unique player identifier
+      - name: player_name
+        description: Player full name
+      - name: team_id
+        description: Team identifier
+      - name: position_id
+        description: Playing position
+      - name: role
+        description: "Player role in match: starter, sub, unavailable"
+      - name: rating
+        description: Player performance rating
+
+  - name: stg_fact_stats
+    description: Match statistics by team
+    columns:
+      - name: match_id
+        description: Match identifier
+      - name: stat_name
+        description: Statistic name
+      - name: stat_key
+        description: Statistic key identifier
+      - name: home_value
+        description: Home team stat value
+      - name: away_value
+        description: Away team stat value
+      - name: is_highlighted
+        description: Whether stat was highlighted
+
+  # Mart models
+  - name: mart_match_details
+    description: Denormalized match details with team and league information
+    columns:
+      - name: match_id
+        description: Unique match identifier
+        tests:
+          - unique
+          - not_null
+      - name: match_name
+        description: Match name
+      - name: match_datetime
+        description: Match start datetime
+      - name: league_name
+        description: League name
+      - name: home_team_name
+        description: Home team name
+      - name: away_team_name
+        description: Away team name
+      - name: home_score
+        description: Home team score
+      - name: away_score
+        description: Away team score
+      - name: result
+        description: "Match result: home_win, away_win, draw"
+      - name: match_status
+        description: Match status
+      - name: stadium_name
+        description: Stadium name
+
+  - name: mart_player_performance
+    description: Player performance metrics by match
+    columns:
+      - name: player_id
+        description: Player identifier
+      - name: player_name
+        description: Player name
+      - name: match_id
+        description: Match identifier
+      - name: team_name
+        description: Team name
+      - name: match_date
+        description: Match date
+      - name: position_id
+        description: Playing position
+      - name: rating
+        description: Performance rating
+      - name: performance_category
+        description: "Category: excellent, good, average, poor"
+      - name: match_result
+        description: "Match result for player's team: win, draw, loss"
+
+  - name: mart_team_statistics
+    description: Team statistics by match
+    columns:
+      - name: match_id
+        description: Match identifier
+      - name: match_date
+        description: Match date
+      - name: home_team
+        description: Home team name
+      - name: away_team
+        description: Away team name
+      - name: stat_key
+        description: Statistic key
+      - name: stat_name
+        description: Statistic name
+      - name: home_stat_value
+        description: Home team stat value
+      - name: away_stat_value
+        description: Away team stat value
+      - name: stat_advantage
+        description: "Which team had the advantage: home_advantage, away_advantage, tied"
+      - name: match_result
+        description: Match outcome

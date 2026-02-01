@@ -1,0 +1,29 @@
+fotmob:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: '../fotmob_data.duckdb'
+      threads: 4
+      extensions:
+        - httpfs
+        - aws
+        - json
+      # settings:
+      #   s3_region: "{{ env_var('AWS_DEFAULT_REGION') }}"
+      #   s3_access_key_id: "{{ env_var('AWS_ACCESS_KEY_ID') }}"
+      #   s3_secret_access_key: "{{ env_var('AWS_SECRET_ACCESS_KEY') }}"
+    prod:
+      type: duckdb
+      path: '../fotmob_data.duckdb'
+      schema: main
+      threads: 4
+      extensions:
+        - httpfs
+        - parquet
+        - aws 
+        - json
+      settings:
+        s3_region: "{{ env_var('AWS_DEFAULT_REGION') }}"
+        s3_access_key_id: "{{ env_var('AWS_ACCESS_KEY_ID') }}"
+        s3_secret_access_key: "{{ env_var('AWS_SECRET_ACCESS_KEY') }}"

@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: fotmob_raw
+    description: Raw FotMob match JSON data from S3
+    tables:
+      - name: fotmob_raw_matches
+        columns:
+          - name: data
+            description: The complete JSON object from FotMob
+      
+      - name: team_json_files
+        description: Team metadata JSON files from FotMob
+        columns:
+          - name: data
+            description: The complete JSON object containing team information
