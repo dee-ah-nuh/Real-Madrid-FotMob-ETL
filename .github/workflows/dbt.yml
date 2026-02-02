@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch: {}
 
 jobs:
   dbt-run:
@@ -40,6 +41,11 @@ jobs:
 
       - name: Prepare env (optional; show values not secrets)
         run: env | grep -E 'AWS|DUCKDB_PATH' || true
+
+      - name: Verify dbt
+        run: |
+          dbt --version || true
+          python -c "import importlib.util; print('duckdb adapter:', importlib.util.find_spec('dbt_duckdb') is not None)" || true
 
       - name: Run dbt (deps + run + test)
         working-directory: airflow/transform
