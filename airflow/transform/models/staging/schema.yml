@@ -1,0 +1,235 @@
+version: 2
+
+models:
+  - name: stg_raw_matches
+    description: Raw match JSON data read from S3. Each row is one FotMob match file with top-level fields extracted from the `general` object.
+    columns:
+      - name: match_id
+        description: Unique match identifier extracted from the source filename.
+        tests:
+          - unique:
+              config:
+                severity: warn
+          - not_null
+      - name: general_match_id
+        description: Match ID from inside the JSON payload (should equal match_id).
+        tests:
+          - not_null
+      - name: source_file
+        description: S3 filename the row was loaded from.
+      - name: match_name
+        description: Human-readable match name (e.g. "Real Madrid vs Barcelona").
+      - name: match_round
+        description: Round number within the league season.
+      - name: league_id
+        description: FotMob league identifier.
+      - name: league_name
+        description: League name.
+      - name: parent_league_id
+        description: Parent league identifier if applicable.
+      - name: country_code
+        description: Country code for the league.
+      - name: home_team_id
+        description: Home team identifier.
+      - name: home_team_name
+        description: Home team name.
+      - name: away_team_id
+        description: Away team identifier.
+      - name: away_team_name
+        description: Away team name.
+      - name: match_time_utc
+        description: Match kick-off time as a UTC string.
+      - name: match_time_utc_date
+        description: Match kick-off time as a TIMESTAMP.
+      - name: started
+        description: Whether the match has started.
+      - name: finished
+        description: Whether the match has finished.
+      - name: loaded_at
+        description: Timestamp when the row was loaded into this model.
+
+  - name: stg_dim_teams
+    description: Team dimension with one row per team per match. Home team rows include stadium metadata; away team rows carry NULL stadium fields.
+    columns:
+      - name: match_id
+        description: Match the team participated in.
+        tests:
+          - not_null
+      - name: team_id
+        description: FotMob team identifier.
+        tests:
+          - not_null
+      - name: team_name
+        description: Team name.
+        tests:
+          - not_null
+      - name: country_code
+        description: Country code associated with the team.
+      - name: stadium_name
+        description: Home stadium name (populated for home team rows only).
+      - name: stadium_city
+        description: Stadium city (populated for home team rows only).
+      - name: stadium_capacity
+        description: Stadium attendance capacity (populated for home team rows only).
+      - name: stadium_lat
+        description: Stadium latitude (populated for home team rows only).
+      - name: stadium_lon
+        description: Stadium longitude (populated for home team rows only).
+      - name: team_side
+        description: Whether the team is the home or away side in this match.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['home', 'away']
+      - name: dbt_inserted_at
+        description: Timestamp when the row was created by dbt.
+
+  - name: stg_dim_leagues
+    description: Distinct leagues referenced across all matches.
+    columns:
+      - name: league_id
+        description: FotMob league identifier.
+        tests:
+          - unique
+          - not_null
+      - name: league_name
+        description: League name.
+        tests:
+          - not_null
+      - name: country_code
+        description: Country code for the league.
+      - name: dbt_inserted_at
+        description: Timestamp when the row was created by dbt.
+
+  - name: stg_dim_players
+    description: Player roster extracted from match lineups. One row per player per match (starters only).
+    columns:
+      - name: match_id
+        description: Match the player appeared in.
+        tests:
+          - not_null
+      - name: player_id
+        description: FotMob player identifier.
+        tests:
+          - not_null
+      - name: player_name
+        description: Player full name.
+      - name: first_name
+        description: Player first name.
+      - name: last_name
+        description: Player last name.
+      - name: team_id
+        description: Team the player played for in this match.
+        tests:
+          - not_null
+      - name: team_name
+        description: Team name.
+      - name: side
+        description: Whether the player was on the home or away side.
+        tests:
+          - accepted_values:
+              values: ['home', 'away']
+      - name: role
+        description: Player role in the match (always 'starter' in this model).
+      - name: position_id
+        description: FotMob position identifier.
+      - name: usual_position_id
+        description: Player's usual playing position identifier.
+      - name: shirt_number
+        description: Shirt number worn in this match.
+      - name: age
+        description: Player age at time of match.
+      - name: country_name
+        description: Player nationality.
+      - name: country_code
+        description: Player nationality code.
+      - name: rating
+        description: FotMob performance rating (0–10 scale).
+      - name: sub_in_time
+        description: Minute the player came on as a substitute (NULL for starters who were not subbed on).
+      - name: sub_out_time
+        description: Minute the player was substituted off (NULL if not subbed).
+      - name: unavailability_type
+        description: Reason a player was unavailable (NULL for starters).
+      - name: dbt_inserted_at
+        description: Timestamp when the row was created by dbt.
+
+  - name: stg_fact_matches
+    description: Core match facts — one row per match.
+    columns:
+      - name: match_id
+        description: Unique match identifier.
+        tests:
+          - unique
+          - not_null
+      - name: match_name
+        description: Human-readable match name.
+      - name: match_round
+        description: Round number within the league season.
+      - name: match_time_utc
+        description: Match kick-off time (UTC string).
+      - name: league_id
+        description: League identifier.
+        tests:
+          - not_null
+      - name: home_team_id
+        description: Home team identifier.
+        tests:
+          - not_null
+      - name: away_team_id
+        description: Away team identifier.
+        tests:
+          - not_null
+      - name: home_score
+        description: Home team final score.
+      - name: away_score
+        description: Away team final score.
+      - name: home_formation
+        description: Home team tactical formation (e.g. 4-3-3).
+      - name: away_formation
+        description: Away team tactical formation.
+      - name: country_code
+        description: Country code of the league.
+      - name: match_status
+        description: Match status.
+        tests:
+          - accepted_values:
+              values: ['finished', 'started', 'cancelled', 'scheduled']
+      - name: dbt_inserted_at
+        description: Timestamp when the row was first created by dbt.
+      - name: dbt_updated_at
+        description: Timestamp when the row was last updated by dbt.
+
+  - name: stg_fact_stats
+    description: Match statistics per team — one row per statistic per match.
+    columns:
+      - name: match_id
+        description: Match identifier.
+        tests:
+          - not_null
+      - name: home_team_id
+        description: Home team identifier.
+        tests:
+          - not_null
+      - name: away_team_id
+        description: Away team identifier.
+        tests:
+          - not_null
+      - name: stat_category
+        description: Stat category title (e.g. "Ball possession").
+      - name: stat_key
+        description: Machine-readable stat category key.
+      - name: stat_name
+        description: Individual statistic name within the category.
+      - name: home_value
+        description: Home team value for this statistic.
+      - name: away_value
+        description: Away team value for this statistic.
+      - name: stat_type
+        description: Statistic type (e.g. percentage, count).
+      - name: is_highlighted
+        description: Whether this stat was highlighted by FotMob.
+      - name: period
+        description: Period the stats cover (always 'all_periods' in this model).
+      - name: dbt_inserted_at
+        description: Timestamp when the row was created by dbt.

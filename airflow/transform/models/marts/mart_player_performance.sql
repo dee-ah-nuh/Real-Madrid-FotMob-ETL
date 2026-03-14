@@ -27,7 +27,7 @@ player_performance AS (
         p.team_name,
         m.match_id,
         m.match_name,
-        m.match_time_utc::TIMESTAMP as match_date,
+        TRY_STRPTIME(m.match_time_utc, '%a, %b %d, %Y, %H:%M UTC') as match_date,
         m.league_id,
         l.league_name,
         p.side,

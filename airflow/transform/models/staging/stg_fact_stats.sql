@@ -19,20 +19,15 @@ stats AS (
         stat->>'title' as stat_category,
         stat->>'key' as stat_key,
         stat_item->>'key' as stat_name,
-        TRY_CAST(stat_item->'stat'->>'value' AS FLOAT) as value,
-        TRY_CAST(stat_item->'stat'->>'total' AS FLOAT) as total,
+        TRY_CAST(stat_item->'stat'->>'home' AS FLOAT) as home_value,
+        TRY_CAST(stat_item->'stat'->>'away' AS FLOAT) as away_value,
         stat_item->'stat'->>'type' as stat_type,
+        TRY_CAST(stat_item->>'highlighted' AS BOOLEAN) as is_highlighted,
         'all_periods' as period,
         CURRENT_TIMESTAMP as dbt_inserted_at
     FROM raw_matches,
-    LATERAL (
-        SELECT json_extract(stat, '$') as stat
-        FROM json_extract(raw_json_data, '$.content.stats.Periods.All.stats') as tbl(stat)
-    ) stats_arr,
-    LATERAL (
-        SELECT json_extract(item, '$') as stat_item
-        FROM json_extract(stats_arr.stat, '$.stats') as items(item)
-    ) stat_items
+    LATERAL (SELECT unnest(json_extract(raw_json_data, '$.content.stats.Periods.All.stats')::JSON[]) as stat) stats_arr,
+    LATERAL (SELECT unnest(json_extract(stat, '$.stats')::JSON[]) as stat_item) stat_items
 )
 
 SELECT * FROM stats

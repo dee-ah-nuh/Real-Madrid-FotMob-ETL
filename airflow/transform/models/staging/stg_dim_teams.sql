@@ -50,7 +50,8 @@ all_teams AS (
     SELECT * FROM away_teams
 )
 
-SELECT 
+SELECT
+    match_id,
     team_id,
     team_name,
     country_code,
@@ -62,7 +63,3 @@ SELECT
     team_side,
     CURRENT_TIMESTAMP as dbt_inserted_at
 FROM all_teams
-    SELECT * FROM away_teams
-)
-
-SELECT * FROM all_teams

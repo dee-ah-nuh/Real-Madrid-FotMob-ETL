@@ -2,8 +2,8 @@
 x-airflow-common: &airflow-common
   # Use custom image with pre-installed dependencies
   build:
-    context: .
-    dockerfile: Dockerfile.airflow
+    context: ..
+    dockerfile: .dev_container/Dockerfile.airflow
   # Fallback to base image if build fails
   image: ${AIRFLOW_IMAGE_NAME:-fotmob-etl-airflow:latest}
   environment: &airflow-common-env

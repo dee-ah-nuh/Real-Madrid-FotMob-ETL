@@ -17,21 +17,21 @@ matches AS (
 team_stats AS (
     SELECT 
         s.match_id,
-        m.match_time_utc::TIMESTAMP as match_date,
+        TRY_STRPTIME(m.match_time_utc, '%a, %b %d, %Y, %H:%M UTC') as match_date,
         m.league_id,
         l.league_name,
         s.home_team_id,
         ht.team_name as home_team,
         s.away_team_id,
-        at.team_name as away_team,
+        awt.team_name as away_team,
         s.stat_key,
         s.stat_name,
-        TRY_CAST(s.home_value AS FLOAT) as home_stat_value,
-        TRY_CAST(s.away_value AS FLOAT) as away_stat_value,
+        s.home_value as home_stat_value,
+        s.away_value as away_stat_value,
         s.is_highlighted,
         CASE
-            WHEN TRY_CAST(s.home_value AS FLOAT) > TRY_CAST(s.away_value AS FLOAT) THEN 'home_advantage'
-            WHEN TRY_CAST(s.home_value AS FLOAT) < TRY_CAST(s.away_value AS FLOAT) THEN 'away_advantage'
+            WHEN s.home_value > s.away_value THEN 'home_advantage'
+            WHEN s.home_value < s.away_value THEN 'away_advantage'
             ELSE 'tied'
         END as stat_advantage,
         m.home_score,
@@ -44,8 +44,8 @@ team_stats AS (
         s.dbt_inserted_at
     FROM stats s
     INNER JOIN matches m ON s.match_id = m.match_id
-    LEFT JOIN {{ ref('stg_dim_teams') }} ht ON s.home_team_id = ht.team_id AND s.match_id = ht.match_id
-    LEFT JOIN {{ ref('stg_dim_teams') }} at ON s.away_team_id = at.team_id AND s.match_id = at.match_id
+    LEFT JOIN {{ ref('stg_dim_teams') }} ht ON s.home_team_id = ht.team_id AND s.match_id = ht.match_id AND ht.team_side = 'home'
+    LEFT JOIN {{ ref('stg_dim_teams') }} awt ON s.away_team_id = awt.team_id AND s.match_id = awt.match_id AND awt.team_side = 'away'
     LEFT JOIN {{ ref('stg_dim_leagues') }} l ON m.league_id = l.league_id
 )
 

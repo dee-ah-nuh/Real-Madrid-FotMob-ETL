@@ -3,6 +3,21 @@
 -- Structure matches the fotmob_schema() function output
 
 
+{{ config(
+    materialized='table',
+    tags=['staging', 'raw-data'],
+    pre_hook=[
+        "INSTALL httpfs",
+        "LOAD httpfs",
+        "CREATE OR REPLACE SECRET fotmob_etl_secret (
+            TYPE s3,
+            PROVIDER config,
+            KEY_ID '{{ env_var(\"AWS_ACCESS_KEY_ID\") }}',
+            SECRET '{{ env_var(\"AWS_SECRET_ACCESS_KEY\") }}',
+            REGION '{{ env_var(\"AWS_DEFAULT_REGION\") }}'
+        )"
+    ]
+) }}
 SELECT 
     regexp_extract(filename, '(\d+)\.json$', 1)::BIGINT as match_id,
     filename as source_file,
@@ -31,6 +46,7 @@ SELECT
     general['matchTimeUTCDate']::TIMESTAMP as match_time_utc_date,
     general['started']::BOOLEAN as started,
     general['finished']::BOOLEAN as finished,
+    to_json(struct_pack(header := header, content := content, seo := seo)) as raw_json_data,
     CURRENT_TIMESTAMP as loaded_at
-FROM read_json('s3://real-madrid-fotmob-data/raw/json/test/*.json', format='auto', filename=true)
+FROM read_json('s3://real-madrid-fotmob-data/raw/json/real_madrid/**/*.json', format='auto', filename=true, union_by_name=true, ignore_errors=true)
 WHERE general IS NOT NULL

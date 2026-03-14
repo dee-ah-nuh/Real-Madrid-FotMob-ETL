@@ -1,0 +1,170 @@
+version: 2
+
+models:
+  - name: mart_match_details
+    description: >
+      Denormalized match details joining facts with team and league dimensions.
+      One row per match. Primary analytical table for match-level reporting.
+    columns:
+      - name: match_id
+        description: Unique match identifier.
+        tests:
+          - unique
+          - not_null
+      - name: match_name
+        description: Human-readable match name.
+      - name: match_round
+        description: Round number within the league season.
+      - name: match_datetime
+        description: Match kick-off datetime (UTC).
+      - name: league_id
+        description: League identifier.
+      - name: league_name
+        description: League name.
+      - name: home_team_id
+        description: Home team identifier.
+      - name: home_team_name
+        description: Home team name.
+      - name: away_team_id
+        description: Away team identifier.
+      - name: away_team_name
+        description: Away team name.
+      - name: home_score
+        description: Home team final score.
+      - name: away_score
+        description: Away team final score.
+      - name: result
+        description: Match result from the home team's perspective.
+        tests:
+          - accepted_values:
+              values: ['home_win', 'away_win', 'draw']
+              config:
+                where: "home_score is not null and away_score is not null"
+      - name: home_formation
+        description: Home team tactical formation.
+      - name: away_formation
+        description: Away team tactical formation.
+      - name: stadium_name
+        description: Name of the stadium where the match was played.
+      - name: stadium_city
+        description: City where the stadium is located.
+      - name: match_status
+        description: Match status (finished, started, cancelled, scheduled).
+      - name: dbt_inserted_at
+        description: Timestamp when the row was first created by dbt.
+      - name: dbt_updated_at
+        description: Timestamp when the row was last updated by dbt.
+
+  - name: mart_player_performance
+    description: >
+      Player-level performance metrics per match. One row per player per match.
+      Includes performance category bands and match result from the player's perspective.
+    columns:
+      - name: player_id
+        description: FotMob player identifier.
+        tests:
+          - not_null
+      - name: player_name
+        description: Player full name.
+      - name: first_name
+        description: Player first name.
+      - name: last_name
+        description: Player last name.
+      - name: match_id
+        description: Match identifier.
+        tests:
+          - not_null
+      - name: match_name
+        description: Human-readable match name.
+      - name: match_date
+        description: Match date and time (UTC).
+      - name: league_id
+        description: League identifier.
+      - name: league_name
+        description: League name.
+      - name: team_id
+        description: Team the player represented.
+      - name: team_name
+        description: Team name.
+      - name: side
+        description: Whether the player was home or away.
+      - name: role
+        description: Player role (starter, sub, unavailable).
+      - name: position_id
+        description: Playing position identifier.
+      - name: usual_position_id
+        description: Player's usual position identifier.
+      - name: country_code
+        description: Player nationality code.
+      - name: shirt_number
+        description: Shirt number.
+      - name: rating
+        description: FotMob performance rating.
+      - name: performance_category
+        description: Performance band based on rating (excellent ≥7.5, good ≥6.5, average ≥5.5, poor <5.5).
+        tests:
+          - accepted_values:
+              values: ['excellent', 'good', 'average', 'poor']
+              config:
+                where: "rating is not null"
+      - name: home_score
+        description: Home team final score.
+      - name: away_score
+        description: Away team final score.
+      - name: match_result
+        description: Match result from this player's team perspective (win, draw, loss).
+        tests:
+          - accepted_values:
+              values: ['win', 'draw', 'loss']
+      - name: dbt_inserted_at
+        description: Timestamp when the row was created by dbt.
+
+  - name: mart_team_statistics
+    description: >
+      Team-level statistics per match and stat category.
+      One row per statistic per match. Useful for tactical and performance analysis.
+    columns:
+      - name: match_id
+        description: Match identifier.
+        tests:
+          - not_null
+      - name: match_date
+        description: Match date and time (UTC).
+      - name: league_id
+        description: League identifier.
+      - name: league_name
+        description: League name.
+      - name: home_team_id
+        description: Home team identifier.
+      - name: home_team
+        description: Home team name.
+      - name: away_team_id
+        description: Away team identifier.
+      - name: away_team
+        description: Away team name.
+      - name: stat_key
+        description: Machine-readable statistic key.
+      - name: stat_name
+        description: Individual statistic name.
+      - name: home_stat_value
+        description: Home team value for this statistic.
+      - name: away_stat_value
+        description: Away team value for this statistic.
+      - name: is_highlighted
+        description: Whether FotMob highlighted this statistic.
+      - name: stat_advantage
+        description: Which team had the higher value for this stat.
+        tests:
+          - accepted_values:
+              values: ['home_advantage', 'away_advantage', 'tied']
+      - name: home_score
+        description: Home team final score.
+      - name: away_score
+        description: Away team final score.
+      - name: match_result
+        description: Match outcome (home_win, away_win, draw).
+        tests:
+          - accepted_values:
+              values: ['home_win', 'away_win', 'draw']
+      - name: dbt_inserted_at
+        description: Timestamp when the row was created by dbt.

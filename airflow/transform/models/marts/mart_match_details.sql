@@ -41,14 +41,13 @@ match_details AS (
         m.match_id,
         m.match_name,
         m.match_round,
-        m.match_time_utc::TIMESTAMP as match_datetime,
+        TRY_STRPTIME(m.match_time_utc, '%a, %b %d, %Y, %H:%M UTC') as match_datetime,
         m.league_id,
         l.league_name,
-        l.parent_league_name,
         m.home_team_id,
         ht.team_name as home_team_name,
         m.away_team_id,
-        at.team_name as away_team_name,
+        awt.team_name as away_team_name,
         m.home_score,
         m.away_score,
         CASE 
@@ -66,7 +65,7 @@ match_details AS (
         m.dbt_updated_at
     FROM matches m
     LEFT JOIN home_teams ht ON m.match_id = ht.match_id
-    LEFT JOIN away_teams at ON m.match_id = at.match_id
+    LEFT JOIN away_teams awt ON m.match_id = awt.match_id
     LEFT JOIN leagues l ON m.league_id = l.league_id
 )
 

@@ -1,16 +1,19 @@
 version: 2
 
-sources:
-  - name: fotmob_raw
-    description: Raw FotMob match JSON data from S3
-    tables:
-      - name: fotmob_raw_matches
-        columns:
-          - name: data
-            description: The complete JSON object from FotMob
-      
-      - name: team_json_files
-        description: Team metadata JSON files from FotMob
-        columns:
-          - name: data
-            description: The complete JSON object containing team information
+# Note: FotMob match data is ingested directly from S3 via DuckDB's read_json()
+# in stg_raw_matches.sql. DuckDB reads the files at query time; there is no
+# traditional database source table. The S3 path is controlled by the
+# `match_json_path` variable in dbt_project.yml.
+#
+# If the raw data is ever loaded into a database table first, update
+# stg_raw_matches.sql to use {{ source('fotmob_raw', 'fotmob_raw_matches') }}
+# and uncomment the source definition below.
+#
+# sources:
+#   - name: fotmob_raw
+#     description: Raw FotMob match JSON data from S3
+#     database: fotmob_data
+#     schema: raw
+#     tables:
+#       - name: fotmob_raw_matches
+#         description: One row per match JSON file loaded from S3

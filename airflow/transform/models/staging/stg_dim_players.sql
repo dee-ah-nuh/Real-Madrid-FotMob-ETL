@@ -34,15 +34,12 @@ home_starters AS (
         NULL::INTEGER as sub_out_time,
         NULL::VARCHAR as unavailability_type
     FROM raw_matches,
-    LATERAL (
-        SELECT json_extract(player, '$') as player_obj
-        FROM json_extract(raw_json_data, '$.content.lineup.homeTeam.starters') as tbl(player)
-    ) starters
+    LATERAL (SELECT unnest(json_extract(raw_json_data, '$.content.lineup.homeTeam.starters')::JSON[]) as player_obj) starters
 ),
 
 -- Extract away team starters
 away_starters AS (
-    SELECT 
+    SELECT
         general_match_id as match_id,
         away_team_id as team_id,
         away_team_name as team_name,
@@ -63,10 +60,7 @@ away_starters AS (
         NULL::INTEGER as sub_out_time,
         NULL::VARCHAR as unavailability_type
     FROM raw_matches,
-    LATERAL (
-        SELECT json_extract(player, '$') as player_obj
-        FROM json_extract(raw_json_data, '$.content.lineup.awayTeam.starters') as tbl(player)
-    ) starters
+    LATERAL (SELECT unnest(json_extract(raw_json_data, '$.content.lineup.awayTeam.starters')::JSON[]) as player_obj) starters
 )
 
 SELECT 
@@ -114,26 +108,3 @@ SELECT
     unavailability_type,
     CURRENT_TIMESTAMP as dbt_inserted_at
 FROM away_starters
-        player->>'lastName' as last_name,
-        TRY_CAST(player->>'age' AS INTEGER) as age,
-        player->>'countryName' as country_name,
-        player->>'countryCode' as country_code,
-        TRY_CAST(player->>'positionId' AS INTEGER) as position_id,
-        TRY_CAST(player->>'usualPlayingPositionId' AS INTEGER) as usual_position_id,
-        player->>'shirtNumber' as shirt_number,
-        TRY_CAST(player->'performance'->>'rating' AS FLOAT) as rating,
-        NULL as sub_in_time,
-        NULL as sub_out_time,
-        NULL as unavailability_type,
-        CURRENT_TIMESTAMP as dbt_inserted_at
-    FROM raw_matches,
-    LATERAL FLATTEN(input => match_json->'content'->'lineup'->'awayTeam'->'starters') player
-),
-
-all_players AS (
-    SELECT * FROM home_starters
-    UNION ALL
-    SELECT * FROM away_starters
-)
-
-SELECT * FROM all_players
